@@ -46,7 +46,7 @@ st.plotly_chart(fig)
 hot_leads_by_pincode = df[df['status'] == 'Hot']['pincode'].value_counts().reset_index()
 hot_leads_by_pincode.columns = ['pincode', 'Count']
 
-fig = px.choropleth(hot_leads_by_pincode, locations='Pincode', color='Count', 
+fig = px.choropleth(hot_leads_by_pincode, locations='pincode', color='Count', 
                     color_continuous_scale='Viridis', title="HOT Calls by Pincode")
 st.plotly_chart(fig)
 
