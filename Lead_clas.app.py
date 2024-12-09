@@ -2,18 +2,17 @@ import streamlit as st
 import pandas as pd
 
 # Load CSV data
-df = pd.read_csv('results_poc_modified_prompt.csv')
+df = pd.read_csv('.csv')
 
 # Show the first few rows of the dataset
 st.write("Call Data Overview", df.head())
 
 
-
 # Calculate KPIs
 total_calls = len(df)
-hot_calls = len(df[df['status'] == 'Hot'])
-warm_calls = len(df[df['status'] == 'Warm'])
-cold_calls = len(df[df['status'] == 'Cold'])
+hot_calls = len(df[df['status'] == 'HOT'])
+warm_calls = len(df[df['status'] == 'warm'])
+cold_calls = len(df[df['status'] == 'cold'])
 
 # Display KPIs in the app
 st.title("Lead Classification Dashboard")
@@ -35,10 +34,13 @@ fig = px.pie(status_count, names='Status', values='Count', title="Call Status Br
 st.plotly_chart(fig)
 
 
+
 # Bar chart for reasons
 reason_count = df.groupby('reason').size().reset_index(name='Count')
 fig = px.bar(reason_count, x='reason', y='Count', title="Top Reasons for Call Classification")
 st.plotly_chart(fig)
+
+
 
 # Map of HOT calls by Pincode
 hot_leads_by_pincode = df[df['status'] == 'HOT']['pincode'].value_counts().reset_index()
@@ -49,15 +51,14 @@ fig = px.choropleth(hot_leads_by_pincode, locations='Pincode', color='Count',
 st.plotly_chart(fig)
 
 
-#--------------------------------------------------------------------
-
-
 
 # Stacked bar chart for model vs status
 model_status_count = pd.crosstab(df['model'], df['status']).reset_index()
 fig = px.bar(model_status_count, x='model', y=model_status_count.columns[1:], 
              title="Car Model vs Call Status", barmode='stack')
 st.plotly_chart(fig)
+
+
 
 # Status filter
 status_filter = st.selectbox("Select Call Status", df['status'].unique())
@@ -73,16 +74,17 @@ filtered_df_by_model = filtered_df[filtered_df['model'] == model_filter]
 st.write(f"Filtered Calls - Model: {model_filter}", filtered_df_by_model)
 
 
+
 # Lookup by file name
 call_id = st.selectbox("Select Call", df['file_name'].unique())
 call_details = df[df['file_name'] == call_id]
 st.write(f"Call Details - {call_id}", call_details)
 
 
+
 # Expander to show call details
 with st.expander(f"Click to view details for {call_id}"):
     st.write(call_details)
-
 
 
 
@@ -92,5 +94,3 @@ status_colors = {'HOT': 'red', 'warm': 'yellow', 'cold': 'blue'}
 # Apply color to the charts
 fig.update_traces(marker=dict(color=df['status'].map(status_colors)))
 st.plotly_chart(fig)
-
-
