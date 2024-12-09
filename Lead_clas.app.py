@@ -47,7 +47,7 @@ import streamlit as st
 
 # Step 1: Load your datasets
 # Replace these paths with the actual paths to your CSV files
-df_models = df_clean   # Contains models status and pincodes
+df_models = df   # Contains models status and pincodes
 df_latitudes_longitudes = pd.read_csv('pincode_with_lat-long.csv')  # Contains pincode, lat, long
 # Remove invalid rows
 df_latitudes_longitudes['Latitude'] = pd.to_numeric(df_latitudes_longitudes['Latitude'], errors='coerce')
