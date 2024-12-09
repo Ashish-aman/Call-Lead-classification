@@ -88,9 +88,9 @@ with st.expander(f"Click to view details for {call_id}"):
 
 
 
-# Assigning colors for different statuses
-status_colors = {'Hot': 'red', 'Warm': 'yellow', 'Cold': 'blue'}
+# # Assigning colors for different statuses
+# status_colors = {'Hot': 'red', 'Warm': 'yellow', 'Cold': 'blue'}
 
-# Apply color to the charts
-fig.update_traces(marker=dict(color=df['status'].map(status_colors)))
-st.plotly_chart(fig)
+# # Apply color to the charts
+# fig.update_traces(marker=dict(color=df['status'].map(status_colors)))
+# st.plotly_chart(fig)
