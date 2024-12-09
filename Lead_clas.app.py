@@ -43,7 +43,7 @@ st.plotly_chart(fig)
 
 
 # Map of HOT calls by Pincode
-hot_leads_by_pincode = df[df['status'] == 'HOT']['pincode'].value_counts().reset_index()
+hot_leads_by_pincode = df[df['status'] == 'Hot']['pincode'].value_counts().reset_index()
 hot_leads_by_pincode.columns = ['pincode', 'Count']
 
 fig = px.choropleth(hot_leads_by_pincode, locations='Pincode', color='Count', 
@@ -89,7 +89,7 @@ with st.expander(f"Click to view details for {call_id}"):
 
 
 # Assigning colors for different statuses
-status_colors = {'HOT': 'red', 'warm': 'yellow', 'cold': 'blue'}
+status_colors = {'Hot': 'red', 'Warm': 'yellow', 'Cold': 'blue'}
 
 # Apply color to the charts
 fig.update_traces(marker=dict(color=df['status'].map(status_colors)))
