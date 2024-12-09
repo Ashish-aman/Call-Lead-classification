@@ -40,80 +40,17 @@ reason_count = df.groupby('reason').size().reset_index(name='Count')
 fig = px.bar(reason_count, x='reason', y='Count', title="Top Reasons for Call Classification")
 st.plotly_chart(fig)
 
+# Map of HOT calls by Pincode
+hot_leads_by_pincode = df[df['status'] == 'HOT']['pincode'].value_counts().reset_index()
+hot_leads_by_pincode.columns = ['Pincode', 'Count']
 
-import pandas as pd
-import folium
-import streamlit as st
+fig = px.choropleth(hot_leads_by_pincode, locations='Pincode', color='Count', 
+                    color_continuous_scale='Viridis', title="HOT Calls by Pincode")
+st.plotly_chart(fig)
 
-# Step 1: Load your datasets
-# Replace these paths with the actual paths to your CSV files
-df_models = df   # Contains models status and pincodes
 
-import pandas as pd
+#--------------------------------------------------------------------
 
-# Step 1: Load the dataset
-df = pd.read_csv('results_poc_modified_prompt.csv')  # Replace with the path to your actual CSV file
-
-# Step 2: Drop rows where Pincode is null or empty
-df_clean = df[df['pincode'].notna()]  # Keeps rows where Pincode is not NaN
-
-# Step 3: Ensure Pincode can be safely converted to integer
-# Strip whitespace and ensure all values are numeric
-df_clean['pincode'] = df_clean['pincode'].astype(str).str.strip()  # Remove leading/trailing spaces
-df_clean = df_clean[df_clean['pincode'].str.isdigit()]  # Keep only rows where Pincode is numeric
-df_clean['pincode'] = df_clean['pincode'].astype(int)  # Convert to integer
-
-# Step 4: Check the results
-print(df_clean[['pincode']].head())
-
-df_latitudes_longitudes = pd.read_csv('pincode_with_lat-long.csv')  # Contains pincode, lat, long
-# Remove invalid rows
-df_latitudes_longitudes['Latitude'] = pd.to_numeric(df_latitudes_longitudes['Latitude'], errors='coerce')
-df_latitudes_longitudes['Longitude'] = pd.to_numeric(df_latitudes_longitudes['Longitude'], errors='coerce')
-# Merge DataFrames by specifying column names
-merged_df = pd.merge(df_models, df_latitudes_longitudes, left_on='pincode', right_on='Pincode', how='inner')
-
-# Step 3: Drop rows where Latitude or Longitude is missing (if necessary)
-merged_df = merged_df.dropna(subset=['Latitude', 'Longitude'])
-
-# Step 4: Create a base map centered on India
-m = folium.Map(location=[20.5937, 78.9629], zoom_start=5)  # India center
-
-# Step 5: Plot each pincode on the map
-for _, row in merged_df.iterrows():
-    lat, lon = row['Latitude'], row['Longitude']
-    pincode = row['Pincode']
-    model_status = row['status']  # Assuming 'Status' column contains model status (hot, warm, cold)
-    
-    # Set the color based on the status (can adjust the color as per your logic)
-    if model_status == 'Hot':
-        color = 'red'
-    elif model_status == 'Warm':
-        color = 'orange'
-    else:
-        color = 'green'
-
-    # Add a CircleMarker for each pincode
-    folium.CircleMarker(
-        location=[lat, lon],
-        radius=6,
-        color=color,
-        fill=True,
-        fill_color=color,
-        fill_opacity=0.7,
-        popup=f"Pincode: {pincode}\nStatus: {model_status}",
-    ).add_to(m)
-
-# Step 6: Save the map and display it in Streamlit
-map_file = "india_pincode_map.html"
-m.save(map_file)
-
-# Display the map in Streamlit
-st.title('Pincode Locations with Model Status on India Map')
-
-# Display map using iframe in Streamlit
-iframe_html = f'<iframe src="{map_file}" width="100%" height="600"></iframe>'
-st.markdown(iframe_html, unsafe_allow_html=True)
 
 
 # Stacked bar chart for model vs status
@@ -121,8 +58,6 @@ model_status_count = pd.crosstab(df['model'], df['status']).reset_index()
 fig = px.bar(model_status_count, x='model', y=model_status_count.columns[1:], 
              title="Car Model vs Call Status", barmode='stack')
 st.plotly_chart(fig)
-
-
 
 # Status filter
 status_filter = st.selectbox("Select Call Status", df['status'].unique())
@@ -138,12 +73,10 @@ filtered_df_by_model = filtered_df[filtered_df['model'] == model_filter]
 st.write(f"Filtered Calls - Model: {model_filter}", filtered_df_by_model)
 
 
-
 # Lookup by file name
 call_id = st.selectbox("Select Call", df['file_name'].unique())
 call_details = df[df['file_name'] == call_id]
 st.write(f"Call Details - {call_id}", call_details)
-
 
 
 # Expander to show call details
@@ -152,9 +85,12 @@ with st.expander(f"Click to view details for {call_id}"):
 
 
 
+
 # Assigning colors for different statuses
-status_colors = {'Hot': 'red', 'Warm': 'yellow', 'Cold': 'blue'}
+status_colors = {'HOT': 'red', 'warm': 'yellow', 'cold': 'blue'}
 
 # Apply color to the charts
 fig.update_traces(marker=dict(color=df['status'].map(status_colors)))
 st.plotly_chart(fig)
+
+
