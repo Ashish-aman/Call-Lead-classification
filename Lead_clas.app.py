@@ -52,94 +52,73 @@ def geocode_pincode(pincode, nomi):
     location = nomi.query_postal_code(pincode)
     return location.latitude, location.longitude
 
-import streamlit as st
-import folium
-from streamlit_folium import st_folium
-import pgeocode
+# Step 2: Drop rows where Pincode is null or empty
+df_clean = df[df['pincode'].notna()]  # Removes rows where Pincode is NaN
+# df_clean = df_clean[df_clean['pincode'].str.strip() != '']  # Removes rows where Pincode is an empty string
 
-# Function to get latitude and longitude from pincode
-def geocode_pincode(pincode, nomi):
-    location = nomi.query_postal_code(pincode)
-    if location is not None:
-        return location.latitude, location.longitude
-    return None, None
+# Step 3: Clean the Pincode column
+# Remove any commas and ensure the pincode is a 6-digit number
+# df_clean['pincode'] = df_clean['pincode'].str.replace(',', '')  # Remove commas
+# df_clean['pincode'] = df_clean['pincode'].apply(lambda x: str(x).zfill(6))  # Pad to 6 digits
+df_clean['pincode'] = df_clean['pincode'].astype(int)
 
-import streamlit as st
+# Step 4: Check the results
+# print(df_clean[['pincode']].head())
 import pandas as pd
 import folium
-from pgeocode import GeoDistance
-from streamlit.components.v1 import iframe
+import streamlit as st
 
-# Initialize GeoDistance for India
-nomi = GeoDistance('IN')
+# Step 1: Load your datasets
+# Replace these paths with the actual paths to your CSV files
+df_models = df_clean   # Contains models status and pincodes
+df_latitudes_longitudes = pd.read_csv('/content/pincode_with_lat-long.csv')  # Contains pincode, lat, long
+# Remove invalid rows
+df_latitudes_longitudes['Latitude'] = pd.to_numeric(df_latitudes_longitudes['Latitude'], errors='coerce')
+df_latitudes_longitudes['Longitude'] = pd.to_numeric(df_latitudes_longitudes['Longitude'], errors='coerce')
+# Merge DataFrames by specifying column names
+merged_df = pd.merge(df_models, df_latitudes_longitudes, left_on='pincode', right_on='Pincode', how='inner')
 
-# Function to clean and validate pincode
-def clean_pincode(pincode):
-    if pincode:
-        pincode = pincode.replace(',', '')  # Remove commas
-        if len(pincode) == 6 and pincode.isdigit():
-            return pincode
-    return None
+# Step 3: Drop rows where Latitude or Longitude is missing (if necessary)
+merged_df = merged_df.dropna(subset=['Latitude', 'Longitude'])
 
-# Function to get latitude and longitude from pincode
-def get_lat_lon(pincode):
-    location = nomi.query_postal_code(pincode)
-    if location.empty:
-        return None
-    return location.iloc[0]['latitude'], location.iloc[0]['longitude']
+# Step 4: Create a base map centered on India
+m = folium.Map(location=[20.5937, 78.9629], zoom_start=5)  # India center
 
-# Function to assign color based on status
-def status_color(status):
-    if status == 'hot':
-        return 'red'
-    elif status == 'warm':
-        return 'yellow'
-    elif status == 'cold':
-        return 'blue'
-    return 'gray'
-
-# # Sample DataFrame (replace with your actual dataframe)
-# df_clean = pd.DataFrame({
-#     'pincode': ['110001', '1234,56', '400001', None, '500001'],
-#     'status': ['hot', 'warm', 'cold', 'warm', 'hot']
-# })
-df_clean = df
-# Clean and process the pincode data
-df_clean['pincode'] = df_clean['pincode'].apply(clean_pincode)
-df_clean = df_clean.dropna(subset=['pincode'])  # Drop rows with missing or invalid pincodes
-
-# Create a base map centered around India
-m = folium.Map(location=[20.5937, 78.9629], zoom_start=5)
-
-# Add markers for each valid pincode on the map
-for _, row in df_clean.iterrows():
-    pincode = row['pincode']
-    status = row['status']
-    lat_lon = get_lat_lon(pincode)
+# Step 5: Plot each pincode on the map
+for _, row in merged_df.iterrows():
+    lat, lon = row['Latitude'], row['Longitude']
+    pincode = row['Pincode']
+    model_status = row['status']  # Assuming 'Status' column contains model status (hot, warm, cold)
     
-    if lat_lon:
-        lat, lon = lat_lon
-        folium.CircleMarker(
-            location=[lat, lon],
-            radius=6,
-            color=status_color(status),
-            fill=True,
-            fill_color=status_color(status),
-            fill_opacity=0.7,
-            popup=f"Pincode: {pincode}\nStatus: {status}"
-        ).add_to(m)
+    # Set the color based on the status (can adjust the color as per your logic)
+    if model_status == 'Hot':
+        color = 'red'
+    elif model_status == 'Warm':
+        color = 'orange'
+    else:
+        color = 'green'
 
-# Save the map to an HTML file
+    # Add a CircleMarker for each pincode
+    folium.CircleMarker(
+        location=[lat, lon],
+        radius=6,
+        color=color,
+        fill=True,
+        fill_color=color,
+        fill_opacity=0.7,
+        popup=f"Pincode: {pincode}\nStatus: {model_status}",
+    ).add_to(m)
+
+# Step 6: Save the map and display it in Streamlit
 map_file = "india_pincode_map.html"
 m.save(map_file)
 
 # Display the map in Streamlit
-st.title('Pincode Status Visualization on India Map')
+st.title('Pincode Locations with Model Status on India Map')
 
-# Display the map using Streamlit iframe component
+# Display map using iframe in Streamlit
 iframe_html = f'<iframe src="{map_file}" width="100%" height="600"></iframe>'
 st.markdown(iframe_html, unsafe_allow_html=True)
-
 
 
 
