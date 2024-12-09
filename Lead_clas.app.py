@@ -52,17 +52,25 @@ def geocode_pincode(pincode, nomi):
     location = nomi.query_postal_code(pincode)
     return location.latitude, location.longitude
 
+import streamlit as st
+import folium
+from streamlit_folium import st_folium
+import pgeocode
+
+# Function to get latitude and longitude from pincode
+def geocode_pincode(pincode, nomi):
+    location = nomi.query_postal_code(pincode)
+    if location is not None:
+        return location.latitude, location.longitude
+    return None, None
+
 # Title
 st.title("India Pincode Status Map")
 
-# # File upload
-# uploaded_file = st.file_uploader("Upload Pincode Data CSV", type=["csv"])
+# Assuming 'df' is the DataFrame you already have
+# Example: df = pd.read_csv('your_file.csv')
 
-# if uploaded_file is not None:
-# Load data
-data = pd.read_csv('results_poc_modified_prompt.csv')
-
-
+# Initialize geocoder for India
 nomi = pgeocode.Nominatim('IN')  # For India
 
 # Map Initialization
@@ -71,28 +79,26 @@ m = folium.Map(location=[22.5937, 78.9629], zoom_start=5)
 # Define status colors
 status_colors = {"hot": "red", "warm": "orange", "cold": "blue"}
 
-# Plot points based on pincode and status
-for _, row in data.iterrows():
-  # Geocode pincode
-  latitude, longitude = geocode_pincode(row['pincode'], nomi)
-  
-  # Check if latitude and longitude are valid
-  if latitude and longitude:
-      folium.CircleMarker(
-          location=[latitude, longitude],
-          radius=5,
-          color=status_colors.get(row['status'].lower(), "gray"),
-          fill=True,
-          fill_color=status_colors.get(row['status'].lower(), "gray"),
-          fill_opacity=0.7,
-          popup=f"Pincode: {row['pincode']}<br>Status: {row['status']}",
-      ).add_to(m)
+# Loop through the DataFrame and plot points on the map
+for _, row in df.iterrows():
+    # Geocode pincode to get latitude and longitude
+    latitude, longitude = geocode_pincode(row['pincode'], nomi)
+    
+    # Only plot if latitude and longitude are found
+    if latitude and longitude:
+        folium.CircleMarker(
+            location=[latitude, longitude],
+            radius=5,
+            color=status_colors.get(row['status'].lower(), "gray"),
+            fill=True,
+            fill_color=status_colors.get(row['status'].lower(), "gray"),
+            fill_opacity=0.7,
+            popup=f"Pincode: {row['pincode']}<br>Status: {row['status']}",
+        ).add_to(m)
 
-# Display map in Streamlit
+# Display the map in the Streamlit app
 st_data = st_folium(m, width=700, height=500)
 
-# else:
-#     st.info("Please upload a CSV file to visualize the map.")
 
 
 
