@@ -69,6 +69,8 @@ st.title("India Pincode Status Map")
 
 # Assuming 'df' is the DataFrame you already have
 # Example: df = pd.read_csv('your_file.csv')
+# Filter out rows with missing or blank pincodes
+df_clean = df[~df['pincode'].isnull() & (df['pincode'].str.strip() != '')]
 
 # Initialize geocoder for India
 nomi = pgeocode.Nominatim('IN')  # For India
@@ -80,7 +82,7 @@ m = folium.Map(location=[22.5937, 78.9629], zoom_start=5)
 status_colors = {"hot": "red", "warm": "orange", "cold": "blue"}
 
 # Loop through the DataFrame and plot points on the map
-for _, row in df.iterrows():
+for _, row in df_clean.iterrows():
     # Geocode pincode to get latitude and longitude
     latitude, longitude = geocode_pincode(row['pincode'], nomi)
     
