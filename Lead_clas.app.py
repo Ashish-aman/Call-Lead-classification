@@ -47,10 +47,7 @@ import folium
 from streamlit_folium import st_folium
 import pgeocode
 
-# Function to get latitude and longitude from pincode
-def geocode_pincode(pincode, nomi):
-    location = nomi.query_postal_code(pincode)
-    return location.latitude, location.longitude
+
 
 # Step 2: Drop rows where Pincode is null or empty
 df_clean = df[df['pincode'].notna()]  # Removes rows where Pincode is NaN
@@ -71,7 +68,7 @@ import streamlit as st
 # Step 1: Load your datasets
 # Replace these paths with the actual paths to your CSV files
 df_models = df_clean   # Contains models status and pincodes
-df_latitudes_longitudes = pd.read_csv('/content/pincode_with_lat-long.csv')  # Contains pincode, lat, long
+df_latitudes_longitudes = pd.read_csv('pincode_with_lat-long.csv')  # Contains pincode, lat, long
 # Remove invalid rows
 df_latitudes_longitudes['Latitude'] = pd.to_numeric(df_latitudes_longitudes['Latitude'], errors='coerce')
 df_latitudes_longitudes['Longitude'] = pd.to_numeric(df_latitudes_longitudes['Longitude'], errors='coerce')
