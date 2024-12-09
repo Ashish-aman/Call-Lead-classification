@@ -10,9 +10,9 @@ df = pd.read_csv('results_poc_modified_prompt.csv')
 
 # Calculate KPIs
 total_calls = len(df)
-hot_calls = len(df[df['status'] == 'HOT'])
-warm_calls = len(df[df['status'] == 'warm'])
-cold_calls = len(df[df['status'] == 'cold'])
+hot_calls = len(df[df['status'] == 'Hot'])
+warm_calls = len(df[df['status'] == 'Warm'])
+cold_calls = len(df[df['status'] == 'Cold'])
 
 # Display KPIs in the app
 st.title("Lead Classification Dashboard")
@@ -44,7 +44,7 @@ st.plotly_chart(fig)
 
 # Map of HOT calls by Pincode
 hot_leads_by_pincode = df[df['status'] == 'HOT']['pincode'].value_counts().reset_index()
-hot_leads_by_pincode.columns = ['Pincode', 'Count']
+hot_leads_by_pincode.columns = ['pincode', 'Count']
 
 fig = px.choropleth(hot_leads_by_pincode, locations='Pincode', color='Count', 
                     color_continuous_scale='Viridis', title="HOT Calls by Pincode")
