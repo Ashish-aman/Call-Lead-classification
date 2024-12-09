@@ -41,26 +41,6 @@ fig = px.bar(reason_count, x='reason', y='Count', title="Top Reasons for Call Cl
 st.plotly_chart(fig)
 
 
-import streamlit as st
-import pandas as pd
-import folium
-from streamlit_folium import st_folium
-import pgeocode
-
-
-
-# Step 2: Drop rows where Pincode is null or empty
-df_clean = df[df['pincode'].notna()]  # Removes rows where Pincode is NaN
-# df_clean = df_clean[df_clean['pincode'].str.strip() != '']  # Removes rows where Pincode is an empty string
-
-# Step 3: Clean the Pincode column
-# Remove any commas and ensure the pincode is a 6-digit number
-# df_clean['pincode'] = df_clean['pincode'].str.replace(',', '')  # Remove commas
-# df_clean['pincode'] = df_clean['pincode'].apply(lambda x: str(x).zfill(6))  # Pad to 6 digits
-df_clean['pincode'] = df_clean['pincode'].astype(int)
-
-# Step 4: Check the results
-# print(df_clean[['pincode']].head())
 import pandas as pd
 import folium
 import streamlit as st
@@ -116,7 +96,6 @@ st.title('Pincode Locations with Model Status on India Map')
 # Display map using iframe in Streamlit
 iframe_html = f'<iframe src="{map_file}" width="100%" height="600"></iframe>'
 st.markdown(iframe_html, unsafe_allow_html=True)
-
 
 
 # Stacked bar chart for model vs status
