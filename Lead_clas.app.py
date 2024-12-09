@@ -41,14 +41,59 @@ fig = px.bar(reason_count, x='reason', y='Count', title="Top Reasons for Call Cl
 st.plotly_chart(fig)
 
 
+import streamlit as st
+import pandas as pd
+import folium
+from streamlit_folium import st_folium
+import pgeocode
 
-# Map of HOT calls by Pincode
-hot_leads_by_pincode = df[df['status'] == 'HOT']['pincode'].value_counts().reset_index()
-hot_leads_by_pincode.columns = ['Pincode', 'Count']
+# Function to get latitude and longitude from pincode
+def geocode_pincode(pincode, nomi):
+    location = nomi.query_postal_code(pincode)
+    return location.latitude, location.longitude
 
-fig = px.choropleth(hot_leads_by_pincode, locations='Pincode', color='Count', 
-                    color_continuous_scale='Viridis', title="HOT Calls by Pincode")
-st.plotly_chart(fig)
+# Title
+st.title("India Pincode Status Map")
+
+# # File upload
+# uploaded_file = st.file_uploader("Upload Pincode Data CSV", type=["csv"])
+
+# if uploaded_file is not None:
+# Load data
+data = pd.read_csv('results_poc_modified_prompt.csv')
+
+
+nomi = pgeocode.Nominatim('IN')  # For India
+
+# Map Initialization
+m = folium.Map(location=[22.5937, 78.9629], zoom_start=5)
+
+# Define status colors
+status_colors = {"hot": "red", "warm": "orange", "cold": "blue"}
+
+# Plot points based on pincode and status
+for _, row in data.iterrows():
+  # Geocode pincode
+  latitude, longitude = geocode_pincode(row['pincode'], nomi)
+  
+  # Check if latitude and longitude are valid
+  if latitude and longitude:
+      folium.CircleMarker(
+          location=[latitude, longitude],
+          radius=5,
+          color=status_colors.get(row['status'].lower(), "gray"),
+          fill=True,
+          fill_color=status_colors.get(row['status'].lower(), "gray"),
+          fill_opacity=0.7,
+          popup=f"Pincode: {row['pincode']}<br>Status: {row['status']}",
+      ).add_to(m)
+
+# Display map in Streamlit
+st_data = st_folium(m, width=700, height=500)
+
+# else:
+#     st.info("Please upload a CSV file to visualize the map.")
+
 
 
 # Stacked bar chart for model vs status
@@ -88,7 +133,7 @@ with st.expander(f"Click to view details for {call_id}"):
 
 
 # Assigning colors for different statuses
-status_colors = {'HOT': 'red', 'warm': 'yellow', 'cold': 'blue'}
+status_colors = {'Hot': 'red', 'Warm': 'yellow', 'Cold': 'blue'}
 
 # Apply color to the charts
 fig.update_traces(marker=dict(color=df['status'].map(status_colors)))
