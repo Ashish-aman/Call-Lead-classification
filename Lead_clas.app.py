@@ -48,6 +48,24 @@ import streamlit as st
 # Step 1: Load your datasets
 # Replace these paths with the actual paths to your CSV files
 df_models = df   # Contains models status and pincodes
+
+import pandas as pd
+
+# Step 1: Load the dataset
+df = pd.read_csv('results_poc_modified_prompt.csv')  # Replace with the path to your actual CSV file
+
+# Step 2: Drop rows where Pincode is null or empty
+df_clean = df[df['pincode'].notna()]  # Keeps rows where Pincode is not NaN
+
+# Step 3: Ensure Pincode can be safely converted to integer
+# Strip whitespace and ensure all values are numeric
+df_clean['pincode'] = df_clean['pincode'].astype(str).str.strip()  # Remove leading/trailing spaces
+df_clean = df_clean[df_clean['pincode'].str.isdigit()]  # Keep only rows where Pincode is numeric
+df_clean['pincode'] = df_clean['pincode'].astype(int)  # Convert to integer
+
+# Step 4: Check the results
+print(df_clean[['pincode']].head())
+
 df_latitudes_longitudes = pd.read_csv('pincode_with_lat-long.csv')  # Contains pincode, lat, long
 # Remove invalid rows
 df_latitudes_longitudes['Latitude'] = pd.to_numeric(df_latitudes_longitudes['Latitude'], errors='coerce')
